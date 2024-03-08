@@ -1,0 +1,6 @@
+
+.ts-sandbox-link:visited, .ts-sandbox-link:link {
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}

@@ -1,0 +1,224 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+const exampleFiles = await Astro.glob('../examples/*.md');
+
+const extractCode = (raw: string): string => {
+  const match = raw.match(/```typescript\s*\n([\s\S]*?)```/);
+  return match ? match[1]! : '';
+};
+
+const examples = exampleFiles.map(
+  ({ frontmatter, rawContent }) => ({
+    title: frontmatter.title,
+    order: frontmatter.order,
+    code: btoa(extractCode(rawContent())),
+  }),
+).sort((a, b) => a.order - b.order);
+
+console.log(examples);
+---
+
+<StarlightPage frontmatter={{ title: "TS Sandbox", template: "splash" }}>
+
+<head>
+  <link
+    rel="stylesheet"
+    data-name="vs/editor/editor.main"
+    href="https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs/editor/editor.main.css"
+  />
+  <script is:inline src="https://cdn.jsdelivr.net/npm/tslib@2.6.2/tslib.min.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/typescript@5.3.3/lib/typescript.min.js"></script>
+  <link rel="stylesheet" href="/sandbox/styles.css">
+  <script is:inline src="/sandbox/fake-console.js"></script>
+  <script is:inline src="/sandbox/base64.js"></script>
+  <script is:inline src="/sandbox/ts-result-modules.js"></script>
+</head>
+
+<div id="container" class="sandbox">
+  <div id="editor-container">
+    <div id="buttons">
+      <label for="examples">Examples:
+        <select id="examples">
+          <option value="">-- Select an example --</option>
+          {examples.map(({ title, code }) => <option value={code}>{title}</option>)}
+        </select>
+      </label>
+      <button id="run-button">Run</button>
+    </div>
+    <div id="editor"></div>
+  </div>
+  <div id="divider"></div>
+  <div id="output-container">
+    <div id="buttons">
+      <button id="clear-button">Clear</button>
+    </div>
+    <div id="output"></div>
+  </div>
+</div>
+
+<script is:inline>
+  var compilerOptions = {
+    strict: true,
+    noImplicitAny: true,
+    strictNullChecks: true,
+    strictFunctionTypes: true,
+    strictBindCallApply: true
+  };
+  var paths =  { 
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs',
+  };
+  var require = { paths: paths };
+</script>
+<!-- Load Monaco Editor -->
+<script is:inline src="https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs/loader.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs/editor/editor.main.nls.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs/editor/editor.main.js"></script>
+<script is:inline>
+  const html = document.documentElement;
+  const getCurrentTheme = () => html.dataset.theme === 'light' ? 'vs' : 'vs-dark';
+
+  function saveCode(code) {
+    window.localStorage.setItem('code', code);
+    window.history.replaceState(null, null, `#${encodeBase64(code)}`);
+  }
+  
+  function saveTheme() {
+    monaco.editor.setTheme(getCurrentTheme());
+  }
+
+  const code = decodeBase64(location.hash.slice(1)) || window.localStorage.getItem('code');
+  saveCode(code);
+
+  const editor = monaco.editor.create(document.getElementById('editor'), {
+    value: code,
+    language: 'typescript',
+    theme: getCurrentTheme(),
+    automaticLayout: true,
+    minimap: {
+      autohide: true,
+    },
+  });
+
+  const currentCompilerOptions = monaco.languages.typescript.typescriptDefaults.getCompilerOptions();
+  monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+    ...currentCompilerOptions,
+    ...compilerOptions,
+  });
+  
+
+  editor.getModel().onDidChangeContent(() => {
+    const code = editor.getValue();
+    saveCode(code);
+  });
+
+  let modulesReady = false;
+
+  const modulesPromise = loadAll().then(() => { modulesReady = true; });
+
+  const fakedConsole = fakeConsole(document.getElementById('output'));
+
+  const catchRejectedPromise = (event) => {
+    fakedConsole.error(unsafe`
+      <span class="error">
+        <strong>
+          ${event.type === 'unhandledrejection'
+            ? "Unhandled promise rejection:"
+            : "Uncaught error:"
+          }
+        </strong>
+      </span>
+      `
+    );
+    
+    fakedConsole.error(event.reason || event.error || event);
+    event.preventDefault();
+  };
+
+  function runCode(code) {
+    if (!modulesReady) {
+      return modulesPromise.then(() => runCode(code));
+    }
+
+    setTimeout(() => {
+      window.removeEventListener('unhandledrejection', catchRejectedPromise);
+      window.removeEventListener('error', catchRejectedPromise);
+    }, 2000);
+
+    try {
+    // Transpile TypeScript to JavaScript
+      const transpileOptions = { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None, ...compilerOptions };
+      const transpiledCode = ts.transpileModule(code, { compilerOptions: transpileOptions }).outputText;
+
+      window.addEventListener('unhandledrejection', catchRejectedPromise);
+      window.addEventListener('error', catchRejectedPromise);
+
+      const fn = new Function('exports', 'scope', `with (scope) { ${transpiledCode} }`);
+      fn({}, { console: fakedConsole });
+
+    } catch (error) {
+      fakedConsole.error('Error executing code:', error);
+    }
+  }
+
+  document.getElementById('run-button').addEventListener('click', function() {
+    const code = editor.getValue();
+    runCode(code);
+  });
+
+  document.getElementById('clear-button').addEventListener('click', function() {
+    document.getElementById('output').innerHTML = '';
+  });
+
+  document.getElementById('examples').addEventListener('change', function(event) {
+    const code = atob(event.target.value);
+    if (!code) return;
+    editor.setValue(code);
+    saveCode(code);
+  });
+
+  require = decorateRequire(require);
+</script>
+
+<script is:inline>
+  let isDragging = false;
+
+  function startDrag(e) {
+    isDragging = true;
+    document.addEventListener('mousemove', handleDrag);
+    document.addEventListener('mouseup', stopDrag);
+  }
+
+  function handleDrag(e) {
+    if (isDragging) {
+      const container = document.getElementById('container');
+      const leftSection = document.getElementById('editor-container');
+      const rightSection = document.getElementById('output-container');
+
+      const containerRect = container.getBoundingClientRect();
+      const mouseX = e.clientX;
+
+      const leftWidth = mouseX - containerRect.left;
+      const rightWidth = containerRect.right - mouseX;
+
+      leftSection.style.flexBasis = `${leftWidth}px`;
+      rightSection.style.flexBasis = `${rightWidth}px`;
+    }
+  }
+
+  function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', handleDrag);
+    document.removeEventListener('mouseup', stopDrag);
+  }
+  document.getElementById('divider').onmousedown = startDrag;
+
+  new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.attributeName === 'data-theme') {
+        saveTheme();
+        return;
+      }
+    }
+  }).observe(html, { attributes: true });
+</script>
+</StarlightPage>

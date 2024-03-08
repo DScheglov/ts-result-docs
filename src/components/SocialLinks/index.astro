@@ -1,0 +1,14 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import DefaulSocialLinks from '@astrojs/starlight/components/SocialIcons.astro';
+import { Icon } from '@astrojs/starlight/components';
+import "./styles.css";
+---
+
+<a href="/sandbox" class="ts-sandbox-link">
+  <Icon name="seti:tsconfig" color="inherit"/>
+  Sandbox
+</a>
+<DefaulSocialLinks {...Astro.props}>
+  <slot />
+</DefaulSocialLinks>

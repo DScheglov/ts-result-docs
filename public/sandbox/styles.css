@@ -1,0 +1,219 @@
+:root {
+  --sandbox-output-data-undefined: #999;
+  --sandbox-output-data-null: #aaa;
+  --sandbox-output-data-string: #C86;
+  --sandbox-output-data-number: #9C9;
+  --sandbox-output-data-boolean: #7FF;
+  --sandbox-output-data-function: #f0e9e9;
+  --sandbox-output-data-error: #FAA;
+  --sandbox-output-data-key: #CCC;
+  --sandbox-output-console-info: #777;
+  --sandbox-output-console-warn: #110;
+  --sandbox-output-console-error: #100;
+  --sandbox-background-color: black;
+  --sandbox-text-color: white;
+  --sandbox-divider-color: #ddd;
+  --sandbox-button-border-color: #ddd;
+  --sandbox-button-text-color: #777;
+  --sandbox-collapsible-arrow-border-color: #333;
+  --sandbox-collapsible-arrow-text-color: #777;
+  --sandbox-collapsible-preview-color: #AAA;
+  --sandbox-collapsible-length-color: #777;
+  --sandbox-console-info-background-color: var(--sandbox-output-console-info);
+  --sandbox-console-warn-background-color: var(--sandbox-output-console-warn);
+  --sandbox-console-error-background-color: var(--sandbox-output-console-error);
+}
+
+:root[data-theme='light'] {
+  --sandbox-output-data-undefined: #999;
+  --sandbox-output-data-null: #aaa;
+  --sandbox-output-data-string: #C86;
+  --sandbox-output-data-number: #9C9;
+  --sandbox-output-data-boolean: #7FF;
+  --sandbox-output-data-function: #f0e9e9;
+  --sandbox-output-data-error: #FAA;
+  --sandbox-output-data-key: #CCC;
+  --sandbox-output-console-info: #777;
+  --sandbox-output-console-warn: #110;
+  --sandbox-output-console-error: #100;
+  --sandbox-background-color: white;
+  --sandbox-text-color: black;
+  --sandbox-divider-color: #ddd;
+  --sandbox-button-border-color: #ddd;
+  --sandbox-button-text-color: #777;
+  --sandbox-collapsible-arrow-border-color: #333;
+  --sandbox-collapsible-arrow-text-color: #777;
+  --sandbox-collapsible-preview-color: #AAA;
+  --sandbox-collapsible-length-color: #777;
+  --sandbox-console-info-background-color: var(--sandbox-output-console-info);
+  --sandbox-console-warn-background-color: var(--sandbox-output-console-warn);
+  --sandbox-console-error-background-color: var(--sandbox-output-console-error);
+  
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+} 
+
+#container.sandbox {
+  position: relative;
+  top: 60px;
+  /* left: -50px; */
+  width: calc(100% - 50px);
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.sandbox #editor-container,
+.sandbox #output-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.sandbox #editor-container {
+  flex-basis: calc(30% - 5px);
+}
+
+.sandbox #editor {
+  height: 100%;
+  width: 100%;
+}
+
+.sandbox #divider {
+  cursor: ew-resize;
+  width: 5px;
+  background-color: var(--sandbox-divider-color);
+  height: 100%;
+}
+
+.sandbox #buttons {
+  display: flex;
+  justify-content: space-between;
+  height: 55px;
+  padding: 10px;
+  /* background-color: #f0f0f0; */
+  border-bottom: 1px solid var(--sandbox-button-border-color);
+}
+
+.sandbox select {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.sandbox button {
+  padding: 0px 10px;
+  cursor: pointer;
+}
+
+.sandbox #output {
+  height: calc(100% - 40px);
+  overflow: auto;
+  background-color: var(--sandbox-background-color);
+  color: var(--sandbox-text-color);
+  font-family: Arial, sans-serif;
+}
+
+.collapsible pre {
+  margin: 0px;
+  padding: 0px;
+}
+
+.collapsible-arrow {
+  cursor: pointer;
+  user-select: none;
+  border: 1px dotted var(--sandbox-collapsible-arrow-border-color);
+  color: var(--sandbox-collapsible-arrow-text-color);
+  display: inline-block;
+  width: 15px;
+  text-align: center;
+}
+
+.collapsible-arrow:hover {
+  border: 1px solid var(--sandbox-collapsible-arrow-text-color);
+  color: var(--sandbox-text-color);
+}
+
+.collapsible-preview {
+  color: var(--sandbox-collapsible-preview-color);
+  display: inline-block;
+}
+
+.collapsible.open > .collapsible-preview {
+  display: none;
+}
+
+.collapsible-length {
+  color: var(--sandbox-collapsible-length-color);
+  font-size: 0.8em;
+}
+
+.collapsible-content {
+  display: none;
+  margin-left: 15px;
+}
+
+.collapsible.open > .collapsible-content {
+  display: block;
+}
+
+#output.sandbox .undefined {
+  color: var(--sandbox-output-data-undefined);
+}
+
+#output.sandbox .null {
+  color: var(--sandbox-output-data-null);
+}
+
+#output.sandbox .string {
+  color: var(--sandbox-output-data-string);
+}
+
+#output.sandbox .number {
+  color: var(--sandbox-output-data-number);
+}
+
+#output.sandbox .boolean {
+  color: var(--sandbox-output-data-boolean);
+}
+
+#output.sandbox .function {
+  color: var(--sandbox-output-data-function);
+}
+
+#output.sandbox .error {
+  color: var(--sandbox-output-data-error);
+}
+
+#output.sandbox .key {
+  color: var(--sandbox-output-data-key);
+  font-weight: lighter;
+}
+
+.console-info,
+.console-warn,
+.console-error {
+  border-bottom: 1px dotted #333;
+  padding: 2px 2px;
+}
+
+.console-warn {
+  background: var(--sandbox-console-warn-background-color);
+}
+
+.console-error {
+  background: var(--sandbox-console-error-background-color);
+}
+
+/* overriding astro starlight styles */
+.content-panel {
+  padding: 0px;
+}
+
+h1#_top {
+  display: none;
+}
