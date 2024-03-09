@@ -1,5 +1,7 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import "../components/Sandbox/styles.css";
+
 const exampleFiles = await Astro.glob('../examples/*.md');
 
 const extractCode = (raw: string): string => {
@@ -14,8 +16,6 @@ const examples = exampleFiles.map(
     code: btoa(extractCode(rawContent())),
   }),
 ).sort((a, b) => a.order - b.order);
-
-console.log(examples);
 ---
 
 <StarlightPage frontmatter={{ title: "TS Sandbox", template: "splash" }}>
@@ -77,17 +77,36 @@ console.log(examples);
   const html = document.documentElement;
   const getCurrentTheme = () => html.dataset.theme === 'light' ? 'vs' : 'vs-dark';
 
-  function saveCode(code) {
+  let currentExampleId = '';
+  function saveCode(code, exid) {
+    currentExampleId = exid;
     window.localStorage.setItem('code', code);
     window.history.replaceState(null, null, `#${encodeBase64(code)}`);
+    document.getElementById('examples').value = exid;
   }
   
   function saveTheme() {
     monaco.editor.setTheme(getCurrentTheme());
   }
 
-  const code = decodeBase64(location.hash.slice(1)) || window.localStorage.getItem('code');
-  saveCode(code);
+  const exampleIds = [];
+  document.querySelectorAll('#examples option').forEach(({ value }) => {
+    if (value) exampleIds.push(value);
+  });
+
+  const getInitialCode = () => {
+    const code =
+      decodeBase64(location.hash.slice(1)) ||
+      window.localStorage.getItem('code');
+
+    if (!code) return [atob(exampleIds[0]), exampleIds[0]];
+    
+    const exid = btoa(code);
+    if (exampleIds.includes(exid)) return [code, exid];
+    return [code, ""];
+  }
+  const [code, exampleId] = getInitialCode();
+  saveCode(code, exampleId);
 
   const editor = monaco.editor.create(document.getElementById('editor'), {
     value: code,
@@ -170,10 +189,12 @@ console.log(examples);
   });
 
   document.getElementById('examples').addEventListener('change', function(event) {
-    const code = atob(event.target.value);
+    const exid = event.target.value;
+    if (exid === currentExampleId) return;
+    const code = atob(exid);
     if (!code) return;
     editor.setValue(code);
-    saveCode(code);
+    saveCode(code, exid);
   });
 
   require = decorateRequire(require);

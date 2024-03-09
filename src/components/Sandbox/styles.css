@@ -1,0 +1,8 @@
+/* overriding astro starlight styles */
+.content-panel {
+  padding: 0px;
+}
+
+h1#_top {
+  display: none;
+}
