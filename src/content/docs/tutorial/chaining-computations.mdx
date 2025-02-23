@@ -1,0 +1,296 @@
+---
+title: Chaining Computations
+description: Learn how to chain functions returning a Result.
+---
+import PlaygroundCode from "../../../components/Examples/PlaygroundCode.astro";
+
+Let's guess we have the following functions:
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from "resultage";
+
+const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err('ERR_NOT_AN_INT');
+
+const okIfPositive = (value: number): Result<number, 'ERR_NOT_POSITIVE'> =>
+  value > 0
+    ? ok(value)
+    : err('ERR_NOT_POSITIVE');
+`} />
+
+And we want to check if value is a positive integer.
+
+Currently we know the following ways to operate with `Result`:
+
+1. Unwrap the value and check it manually
+2. Use `match` method
+3. Use the `map` method
+
+<PlaygroundCode code={`// Unwrapping
+const okIfPositiveIntUnwrap =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> => {
+    const result = okIfInt(value);
+    
+    return result.isOk ? okIfPositive(result.value) : result;
+  };
+
+// Matching
+const okIfPositiveIntMatch =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> =>
+    okIfInt(value).match(
+      int => okIfPositive(int),
+      error => err(error)
+    );
+
+// Mapping
+const okIfPositiveIntMap =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> => {
+    const result = okIfInt(value).map(
+      (int) => okIfPositive(int)
+    );
+
+    return result.isOk ? result.value : result;
+  }
+`}
+  playgroundCode={`import { type Result, ok, err } from "resultage";
+
+const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err('ERR_NOT_AN_INT');
+
+const okIfPositive = (value: number): Result<number, 'ERR_NOT_POSITIVE'> =>
+  value > 0
+    ? ok(value)
+    : err('ERR_NOT_POSITIVE');
+
+// Unwrapping
+const okIfPositiveIntUnwrap =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> => {
+    const result = okIfInt(value);
+    
+    return result.isOk ? okIfPositive(result.value) : result;
+  };
+
+// Matching
+const okIfPositiveIntMatch =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> =>
+    okIfInt(value).match(
+      int => okIfPositive(int),
+      error => err(error)
+    );
+
+// Mapping
+const okIfPositiveIntMap =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> => {
+    const result = okIfInt(value).map(
+      (int) => okIfPositive(int)
+    );
+
+    return result.isOk ? result.value : result;
+  }
+  `}
+/>
+
+Seems like all of these ways are not very elegant and readable.
+
+The `Result` type has a method `chain` that allows us to chain functions that
+return a `Result`, so we can rewrite the `okIfPositiveInt` in the following way:
+
+<PlaygroundCode code={`const okIfPositiveInt =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> =>
+    okIfInt(value).chain(
+      (int) => okIfPositive(int)
+    );
+`}
+  playgroundCode={`import { type Result, ok, err } from "resultage";
+
+const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err('ERR_NOT_AN_INT');
+
+const okIfPositive = (value: number): Result<number, 'ERR_NOT_POSITIVE'> =>
+  value > 0
+    ? ok(value)
+    : err('ERR_NOT_POSITIVE');
+
+const okIfPositiveInt =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> =>
+    okIfInt(value).chain(
+      (int) => okIfPositive(int)
+    );
+`} />
+
+or even more concise:
+
+<PlaygroundCode code={`const okIfPositiveInt =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> =>
+    okIfInt(value).chain(okIfPositive);
+`}
+  playgroundCode={`import { type Result, ok, err } from "resultage";
+
+const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err('ERR_NOT_AN_INT');
+
+const okIfPositive = (value: number): Result<number, 'ERR_NOT_POSITIVE'> =>
+  value > 0
+    ? ok(value)
+    : err('ERR_NOT_POSITIVE');
+
+const okIfPositiveInt =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT' | 'ERR_NOT_POSITIVE'> =>
+    okIfInt(value).chain(okIfPositive);
+`} />
+
+
+## Recovering from errors
+
+Similarly to `chain`, there is a method `chainErr` that allows us to chain functions that
+return a `Result`, but for `err` values.
+
+Let's guess we need to get the minimal odd number equal or larger than the input value,
+if the input is an integer number.
+
+We can check if the input is an integer, then check if it is an odd number,
+and if it is not an odd, we can return the next odd number:
+
+<PlaygroundCode code={`import { type Result, expect, err } from "resultage";
+
+const isInt = (value: unknown): value is number => Number.isInteger(value);
+const isOdd = (value: number) => value % 2 === 1;
+
+const okIfInt = expect(isInt,  'ERR_NOT_AN_INT' as const);
+const okIfOdd = expect(isOdd, 'ERR_NOT_AN_ODD' as const);
+
+const odd =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+    okIfInt(value)
+      .chain(okIfOdd)
+      .chainErr(
+        error => error === 'ERR_NOT_AN_ODD'
+          ? okIfInt(value).map(v => v + 1)
+          : err(error)
+      );
+`} />
+
+It is not an optimal solution, because we are checking if the input is an integer twice.
+But it just to show how we can use `chainErr` method.
+
+The following example is more optimal from the performance perspective,
+but it is a little bit less readable:
+
+<PlaygroundCode 
+  code={`// --- snip ---
+const odd =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+    okIfInt(value).chain(
+      int => okIfOdd(int).chainErr(
+        () => ok(int + 1)
+      ),
+    );
+  `}
+  playgroundCode={`import { type Result, expect, ok } from "resultage";
+
+const isInt = (value: unknown): value is number => Number.isInteger(value);
+const isOdd = (value: number) => value % 2 === 1;
+
+const okIfInt = expect(isInt,  'ERR_NOT_AN_INT' as const);
+const okIfOdd = expect(isOdd, 'ERR_NOT_AN_ODD' as const);
+
+const odd =
+  (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+    okIfInt(value).chain(
+      int => okIfOdd(int).chainErr(
+        () => ok(int + 1)
+      ),
+    );
+`} />
+
+## Promise analogy
+
+As it could be seen from the examples above, the `chain` method is similar to the
+`then` method, and the `chainErr` method is similar to the `catch` method of the
+`Promise`.
+
+It is not a coincidence, because the `Result` type and the `Promise` type
+implement the same pattern - the monad.
+
+There are two main differences between `Result` and `Promise`:
+
+1. `Result` is synchronous, and `Promise` is asynchronous
+2. `Result` has two "railways" typed, when `Promise` has only one:
+   - `Result<T, E>` has two types: `Ok` and `Err`
+   - `Promise<T>` has only one type: `Value`
+
+## Chaining Both `Ok` and `Err`
+
+As you know `Promise.then` also can accept two functions:
+
+ - the first one is called if the promise is resolved
+ - the second one is called if the promise is rejected
+
+The `Result` type has a method `biChain` that allows us to chain functions that
+return a `Result`, but for both `Ok` and `Err` values.
+
+Let's change a previous example to return a default odd number if the input is not an integer:
+
+<PlaygroundCode code={`import { type Result, expect, ok } from "resultage";
+
+const isInt = (value: unknown): value is number => Number.isInteger(value);
+const isOdd = (value: number) => value % 2 === 1;
+
+const okIfInt = expect(isInt,  'ERR_NOT_AN_INT' as const);
+const okIfOdd = expect(isOdd, 'ERR_NOT_AN_ODD' as const);
+
+const odd =
+  (value: unknown): Result<number, 'ERR_NOT_AN_ODD'> =>
+    okIfInt(value).biChain(
+      int => okIfOdd(int),
+      () => ok(43)
+    );
+`} />
+
+Note! Unlike `biMap`, that is equal to sequent `map` and `mapErr`, `biChain`
+doesn't match this principle, so it is not equal to sequent `chain` and `chainErr`.
+
+If we replace the `biChain` call on the `chain` and `chainErr` calls, we will get
+a different result:
+
+<PlaygroundCode code={`// --- snip ---
+const odd =
+  (value: unknown): Result<number, never> =>
+    okIfInt(value)
+      .chain(int => okIfOdd(int))
+      .chainErr(() => ok(43));
+`} 
+  playgroundCode={`import { type Result, expect, ok } from "resultage";
+
+const isInt = (value: unknown): value is number => Number.isInteger(value);
+const isOdd = (value: number) => value % 2 === 1;
+
+const okIfInt = expect(isInt,  'ERR_NOT_AN_INT' as const);
+const okIfOdd = expect(isOdd, 'ERR_NOT_AN_ODD' as const);
+
+const odd =
+  (value: unknown): Result<number, never> =>
+    okIfInt(value)
+      .chain(int => okIfOdd(int))
+      .chainErr(() => ok(43));
+`} />
+
+So, we get a function that never returns an error, when the implementation with
+`biChain` returns an error if the input is not an odd number.
+
+The `biChain` method is very similar to the `match` method, but unlike the last
+one, `biChain` requires the functions to return a `Result`.
+
+## Summary
+
+- The `chain` method allows us to chain functions that return a `Result`
+- The `chainErr` method allows us to chain functions that return a `Result`, but for `err` values
+- The `biChain` method allows us to chain functions that return a `Result`, but for both `Ok` and `Err` values

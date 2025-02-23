@@ -1,0 +1,71 @@
+---
+title: Getting Started
+description: A guide to start using Result
+---
+
+import { TabItem, Tabs } from '@astrojs/starlight/components';
+import CollapsibleSection from '../../../components/CollapsibleSection.astro';
+import ExampleCode from '../../../components/Examples/ExampleCode.astro';
+import ExampleLinks from '../../../components/Examples/ExampleLinks.astro';
+
+The `resultage` provides the `Result<T, E>` type and tools for handling success and
+failure, focusing on type safety, great developer experience, and an easy learning curve.
+
+## Installation
+
+```bash
+npm install resultage
+```
+
+## Usage
+
+<ExampleCode filename='getting-started-usage' mark={{ range: '25-32', }}/>
+
+
+<details open={false}>
+  <summary>More Examples: See and Run in Sandbox</summary>
+  <ExampleLinks exclude={/Getting Started/}/>
+</details>
+
+## What is in the Package?
+
+- Types:
+  - `Result<T, E>` = `Ok<T>` | `Err<E>`
+  - `AsyncResult<T, E>` = `Promise<Result<T, E>>`
+  - Utilities: `OkTypeOf`, `ErrTypeOf`, `ResultOf`
+- Factory Functions:
+  - `ok`, `err`
+  - `asyncOk`, `asyncErr`
+- Type Guards:
+  - `isResult`
+  - `isOk`, `isErr`
+- Conditional Factory Functions:
+  - `okIf`, `expect`
+  - `okIfExists`, `expectExists`
+- `Do`-wrapper for imperative style of chaining
+- Curried versions of `Result` methods
+  - `map`, `mapErr`
+  - `chain`, `chainErr`
+  - and more ...
+- Curried methods to operate with AsyncResult
+  - `thenMap`, `thenMapErr`
+  - `thenChain`, `thenChainErr`
+  - and more ...
+- Utilities to operate with Lists of Results
+  - `collect`, `collectErr`
+  - `separate`
+- Utilities to run `Result` and `AsyncResult` thunks:
+  - `sequence`
+  - `sequenceAsync`
+- Functional Programming utilities:
+  - `pipe`, `compose`
+  - `identity` (`idX`), `lazy`, `asConst`
+- Assertion utilities:
+  - `assertNever`, `unreachable`
+
+## Further Reading
+
+- [Motivation](/docs/intro/motivation)
+- [Tutorial](/docs/tutorial)
+- [API Reference](/docs/api-reference)
+- [Examples](/docs/examples)

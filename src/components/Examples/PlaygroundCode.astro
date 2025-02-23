@@ -1,0 +1,42 @@
+---
+import { Code } from '@astrojs/starlight/components'
+
+type MarkerLineOrRange = number | {
+    range: string;
+    label?: string | undefined;
+};
+
+type MarkerDefinition = string | RegExp | MarkerLineOrRange;
+
+interface Props {
+  code: string;
+  title?: string;
+  showSandBoxLink?: boolean;
+  playgroundCode?: string;
+  mark?: MarkerDefinition | MarkerDefinition[];
+  from?: number;
+  to?: number;
+}
+const { code, mark, title, showSandBoxLink = true, playgroundCode = code, from = 1, to } = Astro.props;
+const base = code.split('\n').slice(from - 1, to).join('\n');
+
+const codeHash = btoa(playgroundCode);
+const codeToShow = (
+  (playgroundCode.startsWith(base) ? '' : `// --- snip ---\n`) +
+  base +
+  (playgroundCode.endsWith(base) ? '' : `\n// --- snip ---`)
+);
+---
+
+
+<slot />
+<p>
+  <Code
+    code={codeToShow}
+    title={title}
+    lang='typescript'
+    mark={mark}
+  />
+
+  {showSandBoxLink && <a href={`/sandbox?#${codeHash}`}>Open in Sandbox</a>}
+</p>

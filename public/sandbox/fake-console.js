@@ -139,7 +139,7 @@ const consoleMethod =
   (output, method) =>
   (...args) => {
     output.innerHTML += `<div class="console-${method}">${
-      args.map(arg => format(arg)).join('')
+      args.map(arg => format(arg)).join('\t')
     }</div>`;
     ensureArrowOnClick();
   }

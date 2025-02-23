@@ -1,19 +1,19 @@
 
-const version = '0.3.1';
-const tsResultModules = [
+const version = '0.6.3';
+const tsResultageModules = [
   { 
-    name: "@cardellini/ts-result",
-    pattern: /^@cardellini\/ts-result(\/(?!fn).+)?$/,
-    types: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/result.d.ts`,
-    lib: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/result.min.js`,
-    libName: 'Result',
+    name: "resultage",
+    pattern: /^resultage(\/(?!fn).+)?$/,
+    types: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/resultage.d.ts`,
+    lib: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/resultage.min.js`,
+    libName: 'Resultage',
     module: null,
   },
-  { name: "@cardellini/ts-result/fn",
-    pattern: /^@cardellini\/ts-result\/fn$/,
-    types: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/fn.d.ts`,
-    lib: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/fn.min.js`,
-    libName: 'ResultFn',
+  { name: "resultage/fn",
+    pattern: /^resultage\/fn$/,
+    types: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/fn.d.ts`,
+    lib: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/fn.min.js`,
+    libName: 'Resultage.Fn',
     module: null,
   }
 ];
@@ -22,9 +22,8 @@ const moduleLoader = (moduleInfo) => fetch(moduleInfo.lib)
   .then(response => response.text())
   .then(lib => {
     const scope = { define: undefined };
-    const moduleFn = new Function('scope', `with (scope) { ${lib} }`);
-    moduleFn(scope);
-    moduleInfo.module = window[moduleInfo.libName];
+    const moduleFn = eval(`() => { ${lib};\n return ${moduleInfo.libName}; }`);
+    moduleInfo.module = moduleFn(scope);
   })
   .catch(console.error);
 
@@ -32,7 +31,7 @@ const typeLoader = (moduleInfo) => fetch(moduleInfo.types)
   .then(response => response.text())
   .then(types => {
     monaco.languages.typescript.typescriptDefaults.addExtraLib(
-      types,
+      `declare module "${moduleInfo.name}" {\n${types}\n}`,
       moduleInfo.name,
     );
     return moduleInfo;
@@ -40,11 +39,11 @@ const typeLoader = (moduleInfo) => fetch(moduleInfo.types)
 
 function decorateRequire(_require) {
   return function (moduleName) {
-    const tsResultModule = tsResultModules
-      .find(moduleInfo =>  moduleInfo.pattern.test(moduleName));
+    const tsResultageModule = tsResultageModules
+      .find(moduleInfo => moduleInfo.pattern.test(moduleName));
 
-    if (tsResultModule) {
-      return tsResultModule.module;
+    if (tsResultageModule) {
+      return tsResultageModule.module;
     }
 
     if (typeof _require === 'function') {
@@ -53,18 +52,17 @@ function decorateRequire(_require) {
 
     return undefined;
   }
-
 }
 function loadModules() {
-  return Promise.all(tsResultModules.map(moduleLoader));
+  return Promise.all(tsResultageModules.map(moduleLoader));
 }
 
 function loadTypes() {
-  return Promise.all(tsResultModules.map(typeLoader));
+  return Promise.all(tsResultageModules.map(typeLoader));
 }
 
 function loadAll() {
-  return Promise.all(tsResultModules.map(
+  return Promise.all(tsResultageModules.map(
     moduleInfo => Promise.all([moduleLoader(moduleInfo), typeLoader(moduleInfo)])
   ));
 }

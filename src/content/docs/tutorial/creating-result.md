@@ -7,7 +7,7 @@ The value of type `Result<T, E>` could be created with the factory
 functions `ok` and `err`:
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42); // Result<number, never>
 const errResult = err('ERR_NOT_FOUND' as const); // Result<never, 'ERR_NOT_FOUND'>
@@ -15,28 +15,28 @@ const errResult = err('ERR_NOT_FOUND' as const); // Result<never, 'ERR_NOT_FOUND
 
 ### Factory `ok`
 
-The `ok` factory function creates a result of type `Result<T, never>`:
+The `ok` factory function creates a result of type `Ok<T>`:
 
 Signature:
 
 ```typescript
-function ok<T>(value: T): Result<T, never>;
+function ok<T>(value: T): Ok<T>;
 ```
 
 ### Factory `err`
 
-The `err` factory function creates a result of type `Result<never, E>`:
+The `err` factory function creates a result of type `Err<E>`:
 
 Signature:
 
 ```typescript
-function err<E>(error: E): Result<never, E>;
+function err<E>(error: E): Err<E>;
 ```
 
 ### Example (ok if value is an integer)
 
 ```typescript
-import { Result, ok, err } from '@cardellini/ts-result';
+import { Result, ok, err } from 'resultage';
 
 const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
   Number.isInteger(value)
@@ -108,7 +108,7 @@ Returns:
 Example:
 
 ```typescript
-import { okIf } from '@cardellini/ts-result';
+import { okIf } from 'resultage';
 
 const isInt = (value: unknown): value is number => Number.isInteger(value);
 
@@ -143,7 +143,7 @@ Where:
 Example:
 
 ```typescript
-import { okIfExists } from '@cardellini/ts-result';
+import { okIfExists } from 'resultage';
 
 const findGreaterThen2 = (numbers: number[]) =>
   okIfExists(
@@ -152,7 +152,7 @@ const findGreaterThen2 = (numbers: number[]) =>
   );
 ```
 
-The `findGreaterThen2` function has type `(numbers: number[]) => Result<number, 'ERR_NOT_FOUND_LT_2'>`.
+The `findGreaterThen2` function has type `(numbers: number[]) => Result<number, 'ERR_NOT_FOUND_GT_2'>`.
 
 ### function `expect`
 
@@ -198,7 +198,7 @@ Returns:
 Example:
 
 ```typescript
-import { expect } from '@cardellini/ts-result';
+import { expect } from 'resultage';
 
 const isInt = (value: unknown): value is number => Number.isInteger(value);
 
@@ -234,8 +234,8 @@ Returns:
 Example:
 
 ```typescript
-import { expectExists } from "@cardellini/ts-result";
-import { pipe } from "@cardellini/ts-result/fn";
+import { expectExists } from "resultage";
+import { pipe } from "resultage/fn";
 
 const findGreaterThen2 = (numbers: number[]) =>
   pipe(

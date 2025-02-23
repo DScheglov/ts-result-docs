@@ -1,0 +1,139 @@
+---
+title: Mapping Result
+description: Learn how to transform the value inside a Result using map and mapErr methods.
+---
+import PlaygroundCode from "../../../components/Examples/PlaygroundCode.astro";
+
+In programming, we need to transform values. But how do we transform a `Result`?
+
+One way is shown in the previous example [Checking And Unwrapping](/guides/checking-and-unwrapping/):
+we can check if the `Result` is `ok` or `err`, then unpack the value, transform it, and pack it
+back into a `Result`.
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from "resultage";
+
+const parseNumber = (str: string): Result<number, "NOT_A_NUMBER"> => {
+  const value = Number(str);
+  if (isNaN(value)) return err("NOT_A_NUMBER");
+  
+  return ok(value);
+};
+
+const parsed = parseNumber("5");
+const doubled = parsed.isOk
+  ? ok(parsed.value * 2)
+  : parsed;
+
+console.log(doubled);
+// Prints: Ok { value: 10 }
+`} />
+
+In general, this approach is fine. But we can do the same using a more elegant way:
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from "resultage";
+
+const parseNumber = (str: string): Result<number, "NOT_A_NUMBER"> => {
+  const value = Number(str);
+  if (isNaN(value)) return err("NOT_A_NUMBER");
+  
+  return ok(value);
+};
+
+const parsed = parseNumber("5");
+const doubled = parsed.map((value) => value * 2);
+
+console.log(doubled);
+// Prints: Ok { value: 10 }
+  `}
+  from={11}
+/>
+
+The `map` method looks known, right?
+Yes, it is! The `Array` type has a similar method called `map`,
+which applies a function to each element of the array.
+
+`Result.map` does the same, but only if the `Result` is `Ok`.
+
+## Mapping `Err`
+
+Similarly, we can transform the `err` value using `mapErr`:
+
+<PlaygroundCode code={`
+import { type Result, ok, err } from "resultage";
+
+const parseNumber = (str: string): Result<number, "NOT_A_NUMBER"> => {
+  const value = Number(str);
+  if (isNaN(value)) return err("NOT_A_NUMBER");
+  
+  return ok(value);
+};
+
+const parsed = parseNumber("not a number").mapErr(
+  err => ({ code: err, path: ['input'] })
+);
+
+console.log(parsed);
+// Prints: Err { error: { code: 'NOT_A_NUMBER', path: ['input'] } }
+`} />
+
+## Mapping both `Ok` and `Err`
+
+We can also transform both `Ok` and `Err` in the same time using `biMap` method:
+
+<PlaygroundCode code={`import { type Result, ok, err } from "resultage";
+
+const parseNumber = (str: string): Result<number, "NOT_A_NUMBER"> => {
+  const value = Number(str);
+  if (isNaN(value)) return err("NOT_A_NUMBER");
+  
+  return ok(value);
+};
+
+const doubleNumber = (input: string) => parseNumber(input).biMap(
+  value => value * 2,
+  err => ({ code: err, path: ['input'] }),
+);
+
+console.log(doubleNumber("5"));
+// Prints: Ok { value: 10 }
+
+console.log(doubleNumber("not a number"));
+// Prints: Err { error: { code: 'NOT_A_NUMBER', path: ['input'] } }
+`} />
+
+Applying the `biMap` method is equivalent to applying `map` and `mapErr` in sequence
+in any order.
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from "resultage";
+
+const parseNumber = (str: string): Result<number, "NOT_A_NUMBER"> => {
+  const value = Number(str);
+  if (isNaN(value)) return err("NOT_A_NUMBER");
+  
+  return ok(value);
+};
+
+const doubleNumber = (input: string) => parseNumber(input)
+  .map(value => value * 2)
+  .mapErr(err => ({ code: err, path: ['input'] }));
+
+console.log(doubleNumber("5"));
+// Prints: Ok { value: 10 }
+
+console.log(doubleNumber("not a number"));
+// Prints: Err { error: { code: 'NOT_A_NUMBER', path: ['input'] } }
+`} 
+  from={10}
+  to={12}
+/>
+
+
+
+## Summary
+
+- `map` transforms the value inside an `Ok` variant.
+- `mapErr` transforms the value inside an `Err` variant.
+- `biMap` transforms both `Ok` and `Err` variants.

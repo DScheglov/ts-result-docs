@@ -12,17 +12,17 @@ export type ModuleInfo = {
 const version = '0.3.1';
 const tsResultModules = [
   { 
-    name: "@cardellini/ts-result",
+    name: "resultage",
     pattern: /^@cardellini\/ts-result(\/(?!fn).+)?$/,
-    types: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/result.d.ts`,
-    lib: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/result.min.js`,
+    types: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/result.d.ts`,
+    lib: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/result.min.js`,
     libName: 'Result',
     module: null,
   },
-  { name: "@cardellini/ts-result/fn",
+  { name: "resultage/fn",
     pattern: /^@cardellini\/ts-result\/fn$/,
-    types: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/fn.d.ts`,
-    lib: `https://cdn.jsdelivr.net/npm/@cardellini/ts-result@${version}/dist/fn.min.js`,
+    types: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/fn.d.ts`,
+    lib: `https://cdn.jsdelivr.net/npm/resultage@${version}/dist/fn.min.js`,
     libName: 'ResultFn',
     module: null,
   }

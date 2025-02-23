@@ -1,0 +1,131 @@
+---
+title: Motivation
+description: Conceptual Differences and Practical Applications of Exceptions and Result Handling in TypeScript.
+---
+import { Aside } from '@astrojs/starlight/components';
+import PlaygroundCode from '../../../components/Examples/PlaygroundCode.astro';
+
+
+The **resultage** library is aims to  enhance the type safety of programs by
+explicitly declaring business logic errors and leveraging the type system to
+ensure accurate error handling and communication.
+
+On both backend and frontend, typing business logic errors enables consistent
+mapping to API contract errors and user-visible messages respectively.
+
+By typing errors, we mean returning them as values from functions rather than
+throwing them.
+
+<Aside type="note">
+TypeScript does not provide a way to specify which exceptions a function might
+throw or even if it throws any exceptions.
+</Aside>
+
+While throwing exceptions has a clear advantage — exceptions are automatically 
+propagated up the call stack until caught — dealing with errors as values 
+requires explicit handling at each level. This forces the caller to 
+handle the error in one of the following ways:
+
+- Return the error received, transforming it into another error if needed
+- Recover from the error and proceed with the next operation
+- Throw an exception
+
+These approaches can become verbose and make the code less readable, 
+often resulting in numerous if statements.
+
+To mitigate this trade-off, the **resultage** library offers a set of tools 
+to work with errors as values in a "monadic" way, similar to how 
+exceptions are handled.
+
+## Does Result Replace Exceptions?
+
+No, `Result` does not replace exceptions; it complements them by providing a way
+to handle expected errors explicitly. 
+
+The **expected errors** — those that occur when all the function's assumed or
+asserted conditions are met, but the desired outcome cannot be achieved.
+Exceptions are reserved for **unexpected errors** — those that happen when at
+least one of the function's assumed or asserted conditions is not met.
+
+Let's look on the Payment Processing. 
+
+We assume both that the payment gateway service is available and that the user's
+input — such as card number, expiration date, and security code — is valid and
+correctly formatted. Expected errors occur when these assumptions are met but
+the payment is still declined due to reasons like insufficient funds, expired
+cards, or suspected fraud. We handle these expected errors using Result to return
+explicit error information that the program can manage gracefully.
+
+Unexpected errors arise when our assumptions are violated — for example, if the
+payment gateway is unavailable (an infrastructure issue) or if the user's input
+is invalid or malformed (e.g., incorrect card number format or missing required
+fields). These unexpected errors indicate that the assumed conditions are not
+met, and we handle them by throwing exceptions, signaling that a fundamental
+issue needs special attention or higher-level error handling.
+
+So, the signature of a function that processes a payment might look like this:
+
+```typescript
+type PaymentSuccess = {
+  transactionId: string;
+  transactionDate: Date;
+};
+
+type PaymentError = {
+  code: 'ERR_INSUFFICIENT_FUNDS' | 'ERR_EXPIRED_CARD' | 'ERR_SUSPECTED_FRAUD';
+  message?: string;
+};
+
+/**
+ * Process a payment using the provided card information.
+ * 
+ * @throws An exception if the payment gateway is unavailable or the input is invalid.
+ */
+function processPayment(
+  amount: number,
+  currency: string,
+  cardNumber: string,
+  expirationDate: string,
+  securityCode: string,
+): Promise<Result<PaymentSuccess, PaymentError>>;
+```
+
+Now, let's change this assumption and consider that the payment gateway might
+be offline or unavailable at times. This adjustment affects how we classify
+errors and how we handle them in our code.
+
+```typescript
+// --- snip ---
+type PaymentError = {
+  code: 'ERR_GATEWAY_UNAVAILABLE' | 'ERR_INSUFFICIENT_FUNDS' | 'ERR_EXPIRED_CARD' | 'ERR_SUSPECTED_FRAUD';
+  message?: string;
+};
+// --- snip ---
+```
+
+And if we assume that the user's input might be invalid, we should adjust the
+error type accordingly:
+
+```typescript
+// --- snip ---
+type PaymentError = {
+  code:
+   | 'ERR_GATEWAY_UNAVAILABLE'
+   | 'ERR_INVALID_CARD_NUMBER'
+   | 'ERR_INVALID_EXPIRATION_DATE'
+   | 'ERR_INVALID_SECURITY_CODE'
+   | 'ERR_INSUFFICIENT_FUNDS'
+   | 'ERR_EXPIRED_CARD'
+   | 'ERR_SUSPECTED_FRAUD';
+  message?: string;
+};
+// --- snip ---
+```
+
+## Summary
+
+- **Exceptions** handle **unexpected errors**.
+- `Result` handles **expected errors**.
+- To classify errors as expected or unexpected:
+  - Define the **desired outcome**: Understand what the function is supposed to achieve.
+  - Define the **assumptions** regarding the function's input and environment.

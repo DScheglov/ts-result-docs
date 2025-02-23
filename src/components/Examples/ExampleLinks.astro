@@ -1,0 +1,28 @@
+---
+import { extractCode } from '../Sandbox/utils';
+interface Props {
+  exclude?: RegExp;
+}
+const { exclude } = Astro.props;
+
+const exampleFiles = await Astro.glob('../../examples/*.md');
+
+const examples = (exclude != null
+  ? exampleFiles.filter(({ frontmatter }) => !exclude.test(frontmatter.title))
+  : exampleFiles
+).map(
+  ({ frontmatter, rawContent }) => ({
+    title: frontmatter.title,
+    order: frontmatter.order,
+    code: btoa(extractCode(rawContent())),
+  }),
+).sort((a, b) => a.order - b.order);
+---
+
+<ol>
+  {examples.map(({ title, code }) => (
+    <li>
+      <a href={`/sandbox?#${code}`}>{title}</a>
+    </li>
+  ))}
+</ol>

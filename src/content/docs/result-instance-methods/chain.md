@@ -17,7 +17,7 @@ interface Result<T, E> {
 ## Example
 
 ```typescript
-import { Result, ok, err } from '@cardellini/ts-result';
+import { Result, ok, err } from 'resultage';
 
 const div = (a: number, b: number): Result<number, 'ERR_DIV_BY_ZERO'> => (
   b === 0

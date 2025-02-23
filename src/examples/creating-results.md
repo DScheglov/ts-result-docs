@@ -4,7 +4,7 @@ order: 1
 ---
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult = err('ERR_NOT_FOUND' as const);

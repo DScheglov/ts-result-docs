@@ -1,0 +1,7 @@
+:root {
+  --sl-content-width: 60rem;
+}
+
+[data-has-sidebar][data-has-toc] .main-pane {
+  --sl-content-margin-inline: calc(50% - var(--sl-content-margin-inline)/2) 0;
+}

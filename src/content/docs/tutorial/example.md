@@ -13,8 +13,8 @@ Let's solve the quadratic equation:
 [Equations Example](./examples/equations.ts)
 
 ```typescript
-import { Result, err, ok, Do } from '@cardellini/ts-result';
-import { assertNever } from '@cardellini/ts-result/fn';
+import { Result, err, ok, Do } from 'resultage';
+import { assertNever } from 'resultage/fn';
 
 const sqrt = (x: number): Result<number, 'ERR_NEGATIVE_NUMBER'> => (
   x < 0 ? err('ERR_NEGATIVE_NUMBER') : ok(Math.sqrt(x))
@@ -81,7 +81,7 @@ Let's extend a book with its authors:
 [Book And Authors Example](./examples/book-and-authors.ts)
 
 ```typescript
-import { Result, asyncDo, expectExists, fold, okIfExists } from '@cardellini/ts-result';
+import { Result, asyncDo, expectExists, fold, okIfExists } from 'resultage';
 
 type Book = { id: string; title: string; authorIds: string[] };
 type Person = { id: string; name: string; };
@@ -188,7 +188,7 @@ The interface is implemented by two classes:
 The value of type `Result<T, E>` could be created with the factory functions:
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42); // Result<number, never>
 const errResult = err('ERR_NOT_FOUND' as const); // Result<never, 'ERR_NOT_FOUND'>
@@ -201,7 +201,7 @@ const errResult = err('ERR_NOT_FOUND' as const); // Result<never, 'ERR_NOT_FOUND
 Returns `true` if the result is `Ok<T>`
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult = err('ERR_NOT_FOUND' as const);
@@ -215,7 +215,7 @@ errResult.isOk(); // false
 Returns `true` if the result is `Err<E>`
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult = err('ERR_NOT_FOUND' as const);
@@ -235,7 +235,7 @@ Returns the value of `Ok<T>` or `Err<E>`.
 
 ```typescript
 import { Equal, Expect } from '@type-challenges/utils';
-import { Result, ok, err } from '@cardellini/ts-result';
+import { Result, ok, err } from 'resultage';
 
 const okResult: Result<number, 'NOT_FOUND'> = ok(42);
 const errResult: Result<string, 'ERR_NOT_FOUND'> = err('ERR_NOT_FOUND');
@@ -272,7 +272,7 @@ Returns the result of `okMatcher` if the result is `Ok<T>` or the result of
 `errMatcher` if the result is `Err<E>`.
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult = err('ERR_NOT_FOUND' as const);
@@ -294,7 +294,7 @@ Executes `fn` if the result is `Ok<T>` and returns the result as is. If the
 result is `Err<E>` then `fn` is not executed and the result is returned as is.
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult = err('ERR_NOT_FOUND' as const);
@@ -312,7 +312,7 @@ Executes `fn` if the result is `Err<E>` and returns the result as is. If the
 result is `Ok<T>` then `fn` is not executed and the result is returned as is.
 
 ```typescript
-import { ok, err } from '@cardellini/ts-result';
+import { ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult = err('ERR_NOT_FOUND' as const);
@@ -375,7 +375,7 @@ export const okIf: {
 Example:
 
 ```typescript
-import { okIf } from '@cardellini/ts-result';
+import { okIf } from 'resultage';
 
 const isNumber = (x: unknown): x is number => typeof x === 'number';
 const isPositive = (x: number) => x > 0;
@@ -425,7 +425,7 @@ export const expect: {
 Example:
 
 ```typescript
-import { expect } from '@cardellini/ts-result';
+import { expect } from 'resultage';
 
 type CodedError<C extends string, P> = { code: C; payload?: P };
 
@@ -473,7 +473,7 @@ const okIfExists<T, E>: (
 Example:
 
 ```typescript
-import { okIfExists } from '@cardellini/ts-result';
+import { okIfExists } from 'resultage';
 
 const positiveNumber = okIfExists(
   [1, 2, 3, -1, 4].find((x) => x > 0),
@@ -508,7 +508,7 @@ Example:
 
 ```typescript
 import { Equal, Expect } from '@type-challenges/utils';
-import { AsyncResult, expectExists } from '@cardellini/ts-result';
+import { AsyncResult, expectExists } from 'resultage';
 
 type User = { login: string; name: string };
 
@@ -725,8 +725,8 @@ with `self` as the second argument.
 Example:
 
 ```typescript
-import { Result, err, ok, map, mapErr } from '@cardellini/ts-result';
-import { asConst, assertNever, pipe } from '@cardellini/ts-result/fn';
+import { Result, err, ok, map, mapErr } from 'resultage';
+import { asConst, assertNever, pipe } from 'resultage/fn';
 
 const sqrt = (x: number): Result<number, 'ERR_NEGATIVE_NUMBER'> => (
   x < 0

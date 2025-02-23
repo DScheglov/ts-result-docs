@@ -1,0 +1,56 @@
+---
+import { Code } from '@astrojs/starlight/components'
+import { extractCode } from '../Sandbox/utils';
+
+type MarkerLineOrRange = number | {
+    range: string;
+    label?: string | undefined;
+};
+
+type MarkerDefinition = string | RegExp | MarkerLineOrRange;
+
+interface Props {
+  filename: string;
+  showTitle?: boolean;
+  showSandBoxLink?: boolean;
+  mark?: MarkerDefinition | MarkerDefinition[];
+}
+const { filename, mark, showTitle = false, showSandBoxLink = true } = Astro.props;
+
+const exampleFiles = await Astro.glob('../../examples/*.md');
+
+
+const example = exampleFiles.filter(
+  ({ file }) => file.endsWith(`${filename}.md`)
+).map(
+  ({ frontmatter, rawContent }) => {
+    const code = extractCode(rawContent());
+    const codeHash = btoa(code);
+    return {
+      title: frontmatter.title,
+      code,
+      codeHash,
+    };
+  }
+)[0];
+---
+
+{
+  example ? (
+    <p>
+      <Code
+        code={example.code}
+        title={showTitle ? example.title : undefined}
+        lang='typescript'
+        mark={mark}
+      />
+
+      {showSandBoxLink && <a href={`/sandbox?#${example.codeHash}`}>Open in Sandbox</a>}
+    </p>
+  )
+  : (
+    <div>
+      <p>Example not found</p>
+    </div>
+  )
+}

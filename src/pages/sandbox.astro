@@ -1,13 +1,10 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { extractCode } from '../components/Sandbox/utils';
 import "../components/Sandbox/styles.css";
 
 const exampleFiles = await Astro.glob('../examples/*.md');
 
-const extractCode = (raw: string): string => {
-  const match = raw.match(/```typescript\s*\n([\s\S]*?)```/);
-  return match ? match[1]! : '';
-};
 
 const examples = exampleFiles.map(
   ({ frontmatter, rawContent }) => ({
@@ -37,7 +34,7 @@ const examples = exampleFiles.map(
 <div id="container" class="sandbox">
   <div id="editor-container">
     <div id="buttons">
-      <label for="examples">Examples:
+      <label for="examples">Example:
         <select id="examples">
           <option value="">-- Select an example --</option>
           {examples.map(({ title, code }) => <option value={code}>{title}</option>)}
@@ -79,10 +76,12 @@ const examples = exampleFiles.map(
 
   let currentExampleId = '';
   function saveCode(code, exid) {
-    currentExampleId = exid;
     window.localStorage.setItem('code', code);
     window.history.replaceState(null, null, `#${encodeBase64(code)}`);
-    document.getElementById('examples').value = exid;
+    if (exid !== undefined) {
+      currentExampleId = exid;
+      document.getElementById('examples').value = exid;
+    }
   }
   
   function saveTheme() {

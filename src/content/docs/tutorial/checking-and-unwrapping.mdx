@@ -1,0 +1,178 @@
+---
+title: Checking and Unwrapping
+description: how to check if a result is ok or err and how to unwrap it
+---
+import PlaygroundCode from "../../../components/Examples/PlaygroundCode.astro";
+
+
+The simplest way to work with `Result<T, E>` is to explicitly check if it is
+`Ok<T>` or `Err<E>` and then just access the corresponding value or error property.
+
+<PlaygroundCode
+  code={`import { ok, err } from 'resultage';
+
+const okResult = ok(42);
+
+if (okResult.isOk) {
+  console.log(okResult.value);
+}
+
+const errResult = err('ERR_NOT_FOUND' as const);
+
+if (errResult.isErr) {
+  console.log(errResult.error);
+}
+`}/>
+
+## Discriminating Result Type
+
+Both properties `isOk` and `isErr` discriminate the result type:
+
+<PlaygroundCode
+  code={`
+import { type Result, ok, err } from 'resultage';
+
+const okResult = ok(42) as Result<number, 'ERR_NOT_AN_INT'>;
+
+if (okResult.isOk) {
+  console.log(okResult.value);
+  //                   ^^^^^ value is number
+} else {
+  console.log(okResult.error);
+  //                   ^^^^^ error is 'ERR_NOT_AN_INT'
+}
+
+const errResult = err('ERR_NOT_INT') as Result<number, 'ERR_NOT_INT'>;
+
+if (errResult.isErr) {
+  console.log(errResult.error);
+  //                    ^^^^^ error is 'ERR_NOT_INT'
+} else {
+  console.log(errResult.value);
+  //                    ^^^^^ value is number
+}
+`} />
+
+## Unwrapping
+
+The `unwrap` and `unwrapErr` methods also allows to access the value or error.
+
+<PlaygroundCode
+  code={`import { ok, err } from 'resultage';
+
+const okResult = ok(42);
+
+console.log(okResult.unwrap()); // prints: 42
+
+const errResult = err('ERR_NOT_FOUND' as const);
+
+console.log(errResult.unwrapErr()); // prints: ERR_NOT_FOUND
+`} />
+
+
+## Unwrapping Throws
+
+The `unwrap` and `unwrapErr` methods throw an error if the result is not `Ok<T>` or `Err<E>` respectively:
+
+<PlaygroundCode
+  code={`import { ok, err } from 'resultage';
+
+const okResult = ok(42);
+const errResult = err('ERR_NOT_FOUND' as const);
+
+try {
+  okResult.unwrapErr();
+} catch (error) {
+  console.error(error);
+  // prints: TypeError: Result is not an Err. Cause: ok(42)
+}
+
+try {
+  errResult.unwrap();
+} catch (error) {
+  console.error(error);
+  // prints: TypeError: Result is not an Ok. Cause: err('ERR_NOT_FOUND')
+}
+`} />
+
+
+## Matching
+
+The `match` method allows to apply a function based on the result type. Like
+`then` in Promises, but for `Result<T, E>`:
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from 'resultage';
+
+const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err('ERR_NOT_AN_INT');
+
+const int = okIfInt(42).match(
+  (value) => value * value,
+  (error) => -error.length, // a little bit unexpected, but is just an example
+);
+
+console.log(int);
+// prints: 42
+`} />
+
+
+
+## Throwing Error Wrapped in Err
+
+In some case it could be convenient to throw an error wrapped in `Err<E>`:
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from 'resultage';
+
+export class ValidationError<C extends string> extends Error {
+  name = 'ValidationError';
+  constructor(public path: string[], public code: C) {
+    super(\`Invalid value at path: $\{path.join('.')}. Cause: $\{code}\`);
+  }
+}
+
+export const validateInt = (
+  value: unknown,
+  path: string[] = [],
+): Result<number, ValidationError<'ERR_NOT_AN_INT'>> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err(new ValidationError(path, 'ERR_NOT_AN_INT'));
+
+const age = validateInt('42', ['age']).unwrapOrThrow();
+// throws: ValidationError: Invalid value at path: age. Cause: ERR_NOT_AN_INT
+`} />
+
+## Suppressing Exception Throwing
+
+In some cases the error value could be ignored and the result could be unwrapped
+with some specific fallback value, if it is `Err<E>`:
+
+<PlaygroundCode
+  code={`import { type Result, ok, err } from 'resultage';
+
+const okIfInt = (value: unknown): Result<number, 'ERR_NOT_AN_INT'> =>
+  Number.isInteger(value)
+    ? ok(value as number)
+    : err('ERR_NOT_AN_INT');
+
+const value1 = okIfInt(42).unwrapOr(0);
+console.log(value1);
+// prints: 42
+
+const value2 = okIfInt('42').unwrapOr(0);
+console.log(value2);
+// prints: 0
+`} />
+
+## Summary
+
+- Use `isOk` and `isErr` to check if a result is `Ok<T>` or `Err<E>`
+- Access the value or error directly after `Result` type is discriminated
+- Use `unwrap` and `unwrapErr` to unwrap a result
+- Use `unwrapOrThrow` to unwrap a result and throw an error if it is `Err<E>`
+- Use `unwrapOr` to unwrap a result with a fallback value if it is `Err<E>`
+- Use `match` to unwrap a result based on its type

@@ -17,7 +17,7 @@ interface Result<T, E> {
 ## Example
 
 ```typescript
-import { Result, ok, err } from '@cardellini/ts-result';
+import { Result, ok, err } from 'resultage';
 
 const okResult = ok(42);
 const errResult: Result<number, 'ERR_NOT_FOUND'> = err('ERR_NOT_FOUND');

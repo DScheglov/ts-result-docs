@@ -1,0 +1,77 @@
+---
+title: Iterating Over Results
+description: how to iterate over results
+---
+import { Code } from "@astrojs/starlight/components"
+import { extractCode, encodeBase64 } from "../../../components/Sandbox/utils";
+import * as CollectingOks from "../../../examples/collecting-oks.md";
+import * as CollectingErrs from "../../../examples/collecting-errs.md";
+import * as CollectOksWithDo from "../../../examples/collect-oks-with-do.md";
+
+
+Let's look on the following case:
+
+- we have list of strings
+- we need to parse each string as integer
+- return the result of parsing as a list of integers or error if parsing failed for any string
+
+```typescript
+import { Result, ok, err } from "resultage";
+
+const parseInteger = (input: string): Result<number, "ERR_NOT_AN_INT"> => {
+  const parsed = +input;
+  return Number.isInteger(parsed) ? ok(parsed) : err("ERR_NOT_AN_INT");
+}
+
+const strings = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+const parsedIntegers = strings.map(parseInteger);
+```
+
+Now we have a list of `Result<number, "ERR_NOT_AN_INT">` and we need to iterate
+over it and collect all integers or return the first error we encounter.
+
+```typescript
+const result = parsedIntegers.reduce<Result<number[], "ERR_NOT_AN_INT">>(
+  (acc, current) => {
+    if (acc.isErr()) {
+      return acc;
+    }
+    if (current.isErr()) {
+      return current;
+    }
+    return ok([...acc.unwrap(), current.unwrap()]);
+  },
+  ok([]),
+);
+
+console.log(result);
+// Prints: Ok { value: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+```
+
+Or the same with `Do`: <a href={`/sandbox#${encodeBase64(extractCode(CollectOksWithDo.rawContent()))}`}>Collect Ok's With Do</a>
+
+## Collecting Ok's
+
+In this example we used `reduce` method to iterate over the list of `Result`s,
+collecting the integers and returning the first error we encounter.
+
+Such problem is quite common, so the library provides a function `collect`:
+
+<Code code={extractCode(CollectingOks.rawContent())} lang="typescript" />
+
+<a href={`/sandbox#${encodeBase64(extractCode(CollectingOks.rawContent()))}`}>
+  Run In Sandbox
+</a>
+
+## Collecting Err's
+
+Sometimes we need to collect errors instead of Ok's. The library provides a
+function `collectErr`, that returns the first Ok it encounters or a list of
+errors.
+
+<Code code={extractCode(CollectingErrs.rawContent())} lang="typescript" />
+
+<a href={`/sandbox#${encodeBase64(extractCode(CollectingErrs.rawContent()))}`}>
+  Run In Sandbox
+</a>
+

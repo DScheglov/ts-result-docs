@@ -4,7 +4,7 @@ order: 2
 ---
 
 ```typescript
-import { okIf, okIfExists } from '@cardellini/ts-result';
+import { okIf, okIfExists } from 'resultage';
 
 const isInt = (value: unknown): value is number => Number.isInteger(value);
 
